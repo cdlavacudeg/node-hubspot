@@ -2,8 +2,11 @@ var express = require('express');
 var router = express.Router();
 
 const { getCharacter, getLocation } = require('rickmortyapi');
-
-/* Migrate the contact and company data from rick and morty api */
+const hubspot = require('@hubspot/api-client');
+const { AssociationTypes } = hubspot;
+const hubspotClient = new hubspot.Client({
+  accessToken: process.env.ACCESS_TOKEN,
+}); /* Migrate the contact and company data from rick and morty api */
 router.post('/', async function (req, res, next) {
   const totalCharacters = 826;
   // 1 and the prime characters
@@ -39,11 +42,56 @@ router.post('/', async function (req, res, next) {
       // const isInArray = idLocations.includes(idLocation);
       // if (!isInArray) {
       idLocations.push(idLocation);
+      character.idLocation = idLocation;
       // }
     }
   });
 
   const locations = await getLocation(idLocations);
+
+  const associationIds = {};
+
+  for (let location of locations.data) {
+    const companyObj = {
+      properties: {
+        location_id: location.id,
+        name: location.name,
+        location_type: location.type,
+        dimension: location.dimension,
+        creation_date: location.created,
+      },
+    };
+    const createCompanyResponse = await hubspotClient.crm.companies.basicApi.create(companyObj);
+    associationIds[location.id] = createCompanyResponse.id;
+  }
+
+  for (let character of characters.data) {
+    const contactObj = {
+      properties: {
+        character_id: character.id,
+        firstname: character.name,
+        lastname: character.name,
+        status_character: character.status,
+        character_species: character.species,
+        character_gender: character.gender,
+      },
+    };
+    const createContactResponse = await hubspotClient.crm.contacts.basicApi.create(contactObj);
+    if (character.idLocation === undefined) continue;
+    await hubspotClient.crm.associations.v4.basicApi.create(
+      'companies',
+      associationIds[character.idLocation],
+      'contacts',
+      createContactResponse.id,
+      [
+        {
+          associationCategory: 'HUBSPOT_DEFINED',
+          associationTypeId: AssociationTypes.companyToContact,
+          // AssociationTypes contains the most popular HubSpot defined association types
+        },
+      ]
+    );
+  }
 
   res.send({ characters: characters?.data, locations: locations?.data });
 });
