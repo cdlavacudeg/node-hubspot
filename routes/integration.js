@@ -29,11 +29,11 @@ router.post('/companies', async function (req, res, next) {
     const createCompanyResponse = await HubSpotHelper.createCompany(
       {
         properties: {
-          location_id: location_id,
-          name: name,
-          location_type: location_type,
-          dimension: dimension,
-          creation_date: creation_date,
+          location_id,
+          name,
+          location_type,
+          dimension,
+          creation_date,
         },
       },
       { accessToken: accessTokenMirror }
@@ -43,11 +43,11 @@ router.post('/companies', async function (req, res, next) {
 
   const companyObj = {
     properties: {
-      location_id: location_id,
-      name: name,
-      location_type: location_type,
-      dimension: dimension,
-      creation_date: creation_date,
+      location_id,
+      name,
+      location_type,
+      dimension,
+      creation_date,
     },
   };
 
@@ -55,14 +55,71 @@ router.post('/companies', async function (req, res, next) {
     accessToken: accessTokenMirror,
   });
 
-  return res.send({ companyObj, company, updateCompanyResponse });
+  return res.send({ updateCompanyResponse });
 });
 
 router.post('/contacts', async function (req, res, next) {
-  return res.json({
-    message: 'PUT /integration/contacts',
-    body: req.body,
+  const { character_id } = req.body;
+  let contact;
+  try {
+    const PublicObjectSearchRequest = {
+      limit: 1,
+      after: 0,
+      sorts: ['character_id'],
+      properties: [
+        'character_id',
+        'lastname',
+        'firstname',
+        'character_gender',
+        'status_character',
+        'character_species',
+      ],
+      filterGroups: [{ filters: [{ propertyName: 'location_id', value: character_id, operator: 'EQ' }] }],
+    };
+
+    const searchContacts = await HubSpotHelper.searchContacts(PublicObjectSearchRequest, {
+      accessToken: accessTokenMirror,
+    });
+
+    contact = searchContacts.results[0];
+  } catch (error) {
+    contact = null;
+  }
+
+  const { firstname, lastname, status_character, character_species, character_gender } = req.body;
+  if (!contact) {
+    const createContactResponse = await HubSpotHelper.createCompany(
+      {
+        properties: {
+          character_id,
+          firstname,
+          lastname,
+          status_character,
+          character_species,
+          character_gender,
+        },
+      },
+      { accessToken: accessTokenMirror }
+    );
+    return res.send({ createContactResponse });
+  }
+
+  const contactObj = {
+    properties: {
+      character_id,
+      firstname,
+      lastname,
+      status_character,
+      character_species,
+      character_gender,
+    },
+  };
+
+  const updateCompanyResponse = await HubSpotHelper.updateContact(contact.id, contactObj, {
+    accessToken: accessTokenMirror,
   });
+
+  return res.send({ updateCompanyResponse });
 });
 
 module.exports = router;

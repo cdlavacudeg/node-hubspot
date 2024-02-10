@@ -4,13 +4,15 @@ const hubspotClient = new hubspot.Client({
   accessToken: process.env.ACCESS_TOKEN,
 });
 
+const hubspotClientMirror = new hubspot.Client({
+  accessToken: process.env.ACCESS_TOKEN_MIRROR,
+});
+
 class HubSpotHelper {
   static async getCompany(companyId, { accessToken } = {}) {
     let hubspotClientGet = hubspotClient;
     if (accessToken && accessToken != process.env.ACCESS_TOKEN) {
-      hubspotClientGet = new hubspot.Client({
-        accessToken: accessToken,
-      });
+      hubspotClientGet = hubspotClientMirror;
     }
 
     const getCompanyResponse = await hubspotClientGet.crm.companies.basicApi.getById(companyId, [
@@ -22,9 +24,7 @@ class HubSpotHelper {
   static async searchCompanies(PublicObjectSearchRequest, { accessToken } = {}) {
     let hubspotClientSearch = hubspotClient;
     if (accessToken && accessToken != process.env.ACCESS_TOKEN) {
-      hubspotClientSearch = new hubspot.Client({
-        accessToken: accessToken,
-      });
+      hubspotClientSearch = hubspotClientMirror;
     }
 
     const apiResponse = await hubspotClientSearch.crm.companies.searchApi.doSearch(PublicObjectSearchRequest);
@@ -43,9 +43,7 @@ class HubSpotHelper {
     // };
     let hubspotClientCreate = hubspotClient;
     if (accessToken && accessToken != process.env.ACCESS_TOKEN) {
-      hubspotClientCreate = new hubspot.Client({
-        accessToken: accessToken,
-      });
+      hubspotClientCreate = hubspotClientMirror;
     }
     const createCompanyResponse = await hubspotClientCreate.crm.companies.basicApi.create(companyObj);
     return createCompanyResponse;
@@ -63,13 +61,21 @@ class HubSpotHelper {
     // };
     let hubspotClientUpdate = hubspotClient;
     if (accessToken && accessToken != process.env.ACCESS_TOKEN) {
-      hubspotClientUpdate = new hubspot.Client({
-        accessToken: accessToken,
-      });
+      hubspotClientUpdate = hubspotClientMirror;
     }
 
     const updateCompanyResponse = await hubspotClientUpdate.crm.companies.basicApi.update(companyId, companyObj);
     return updateCompanyResponse;
+  }
+
+  static async searchContacts(PublicObjectSearchRequest, { accessToken } = {}) {
+    let hubspotClientSearch = hubspotClient;
+    if (accessToken && accessToken != process.env.ACCESS_TOKEN) {
+      hubspotClientSearch = hubspotClientMirror;
+    }
+
+    const apiResponse = await hubspotClientSearch.crm.contacts.searchApi.doSearch(PublicObjectSearchRequest);
+    return apiResponse;
   }
 
   static async createContact(contactObj, { accessToken } = {}) {
@@ -85,20 +91,26 @@ class HubSpotHelper {
     // };
     let hubspotClientCreate = hubspotClient;
     if (accessToken && accessToken != process.env.ACCESS_TOKEN) {
-      hubspotClientCreate = new hubspot.Client({
-        accessToken: accessToken,
-      });
+      hubspotClientCreate = hubspotClientMirror;
     }
     const createContactResponse = await hubspotClientCreate.crm.contacts.basicApi.create(contactObj);
     return createContactResponse;
   }
 
+  static async updateContact(contactId, contactObj, { accessToken } = {}) {
+    let hubspotClientUpdate = hubspotClient;
+    if (accessToken && accessToken != process.env.ACCESS_TOKEN) {
+      hubspotClientUpdate = hubspotClientMirror;
+    }
+
+    const updateCompanyResponse = await hubspotClientUpdate.crm.contacts.basicApi.update(contactId, contactObj);
+    return updateCompanyResponse;
+  }
+
   static async createAssociation(contactId, companyId, { accessToken } = {}) {
     let hubspotClientCreate = hubspotClient;
     if (accessToken && accessToken != process.env.ACCESS_TOKEN) {
-      hubspotClientCreate = new hubspot.Client({
-        accessToken: accessToken,
-      });
+      hubspotClientCreate = hubspotClientMirror;
     }
     const createAssociationResponse = await hubspotClientCreate.crm.associations.v4.basicApi.create(
       'companies',
