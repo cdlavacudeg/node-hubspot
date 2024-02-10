@@ -19,20 +19,13 @@ class HubSpotHelper {
     return getCompanyResponse;
   }
 
-  static async searchCompanies(name, { accessToken } = {}) {
+  static async searchCompanies(PublicObjectSearchRequest, { accessToken } = {}) {
     let hubspotClientSearch = hubspotClient;
     if (accessToken && accessToken != process.env.ACCESS_TOKEN) {
       hubspotClientSearch = new hubspot.Client({
         accessToken: accessToken,
       });
     }
-    const PublicObjectSearchRequest = {
-      limit: 1,
-      after: 0,
-      sorts: ['name'],
-      properties: ['location_id,name,location_type,dimension,creation_date,hs_object_id'],
-      filterGroups: [{ filters: [{ propertyName: 'name', value: name, operator: 'EQ' }] }],
-    };
 
     const apiResponse = await hubspotClientSearch.crm.companies.searchApi.doSearch(PublicObjectSearchRequest);
     return apiResponse;
