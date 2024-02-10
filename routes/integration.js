@@ -74,7 +74,7 @@ router.post('/contacts', async function (req, res, next) {
         'status_character',
         'character_species',
       ],
-      filterGroups: [{ filters: [{ propertyName: 'location_id', value: character_id, operator: 'EQ' }] }],
+      filterGroups: [{ filters: [{ propertyName: 'character_id', value: character_id, operator: 'EQ' }] }],
     };
 
     const searchContacts = await HubSpotHelper.searchContacts(PublicObjectSearchRequest, {
@@ -88,7 +88,7 @@ router.post('/contacts', async function (req, res, next) {
 
   const { firstname, lastname, status_character, character_species, character_gender } = req.body;
   if (!contact) {
-    const createContactResponse = await HubSpotHelper.createCompany(
+    const createContactResponse = await HubSpotHelper.createContact(
       {
         properties: {
           character_id,
