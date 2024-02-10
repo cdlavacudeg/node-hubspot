@@ -5,6 +5,39 @@ const hubspotClient = new hubspot.Client({
 });
 
 class HubSpotHelper {
+  static async getCompany(companyId, { accessToken } = {}) {
+    let hubspotClientGet = hubspotClient;
+    if (accessToken && accessToken != process.env.ACCESS_TOKEN) {
+      hubspotClientGet = new hubspot.Client({
+        accessToken: accessToken,
+      });
+    }
+
+    const getCompanyResponse = await hubspotClientGet.crm.companies.basicApi.getById(companyId, [
+      'location_id,name,location_type,dimension,creation_date,hs_object_id',
+    ]);
+    return getCompanyResponse;
+  }
+
+  static async searchCompanies(name, { accessToken } = {}) {
+    let hubspotClientSearch = hubspotClient;
+    if (accessToken && accessToken != process.env.ACCESS_TOKEN) {
+      hubspotClientSearch = new hubspot.Client({
+        accessToken: accessToken,
+      });
+    }
+    const PublicObjectSearchRequest = {
+      limit: 1,
+      after: 0,
+      sorts: ['name'],
+      properties: ['location_id,name,location_type,dimension,creation_date,hs_object_id'],
+      filterGroups: [{ filters: [{ propertyName: 'name', value: name, operator: 'EQ' }] }],
+    };
+
+    const apiResponse = await hubspotClientSearch.crm.companies.searchApi.doSearch(PublicObjectSearchRequest);
+    return apiResponse;
+  }
+
   static async createCompany(companyObj, { accessToken } = {}) {
     // const companyObj = {
     //   properties: {
@@ -23,6 +56,27 @@ class HubSpotHelper {
     }
     const createCompanyResponse = await hubspotClientCreate.crm.companies.basicApi.create(companyObj);
     return createCompanyResponse;
+  }
+
+  static async updateCompany(companyId, companyObj, { accessToken } = {}) {
+    // const companyObj = {
+    //   properties: {
+    //    location_id: companyObj.properties.location_id,
+    //    name: companyObj.properties.name,
+    //    location_type: companyObj.properties.location_type,
+    //    dimension: companyObj.properties.dimension,
+    //    creation_date: companyObj.properties.creation_date,
+    //   },
+    // };
+    let hubspotClientUpdate = hubspotClient;
+    if (accessToken && accessToken != process.env.ACCESS_TOKEN) {
+      hubspotClientUpdate = new hubspot.Client({
+        accessToken: accessToken,
+      });
+    }
+
+    const updateCompanyResponse = await hubspotClientUpdate.crm.companies.basicApi.update(companyId, companyObj);
+    return updateCompanyResponse;
   }
 
   static async createContact(contactObj, { accessToken } = {}) {
