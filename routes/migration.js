@@ -1,14 +1,11 @@
 var express = require('express');
 var router = express.Router();
-
 const { getCharacter, getLocation } = require('rickmortyapi');
-const hubspot = require('@hubspot/api-client');
-const { AssociationTypes } = hubspot;
-const hubspotClient = new hubspot.Client({
-  accessToken: process.env.ACCESS_TOKEN,
-}); /* Migrate the contact and company data from rick and morty api */
+const HubSpotHelper = require('../helpers/hubSpot');
+
+/* Migrate the contact and company data from rick and morty api */
 router.post('/', async function (req, res, next) {
-  const totalCharacters = 826;
+  const totalCharacters = process.env.TOTAL_CHARACTERS;
   // 1 and the prime characters
   const idCharacters = [1];
 
@@ -61,7 +58,7 @@ router.post('/', async function (req, res, next) {
         creation_date: location.created,
       },
     };
-    const createCompanyResponse = await hubspotClient.crm.companies.basicApi.create(companyObj);
+    const createCompanyResponse = await HubSpotHelper.createCompany(companyObj);
     associationIds[location.id] = createCompanyResponse.id;
   }
 
@@ -76,21 +73,9 @@ router.post('/', async function (req, res, next) {
         character_gender: character.gender,
       },
     };
-    const createContactResponse = await hubspotClient.crm.contacts.basicApi.create(contactObj);
+    const createContactResponse = await HubSpotHelper.createContact(contactObj);
     if (character.idLocation === undefined) continue;
-    await hubspotClient.crm.associations.v4.basicApi.create(
-      'companies',
-      associationIds[character.idLocation],
-      'contacts',
-      createContactResponse.id,
-      [
-        {
-          associationCategory: 'HUBSPOT_DEFINED',
-          associationTypeId: AssociationTypes.companyToContact,
-          // AssociationTypes contains the most popular HubSpot defined association types
-        },
-      ]
-    );
+    await HubSpotHelper.createAssociation(createContactResponse.id, associationIds[character.idLocation]);
   }
 
   res.send({ characters: characters?.data, locations: locations?.data });
