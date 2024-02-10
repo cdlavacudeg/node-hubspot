@@ -1,12 +1,14 @@
 var express = require('express');
-const MigrationController = require('../controllers/migration');
 var router = express.Router();
+
+const MigrationController = require('../controllers/migration');
+const Response = require('../helpers/response');
 
 /* Migrate the contact and company data from rick and morty api */
 router.post('/', async function (req, res, next) {
   try {
     const migrationResult = await MigrationController.migrate();
-    return res.send({ ...migrationResult });
+    return Response.success(req, res, 'Migration completed', migrationResult, 201);
   } catch (error) {
     return next(error);
   }

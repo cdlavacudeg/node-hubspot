@@ -3,7 +3,7 @@ const HubSpotHelper = require('../helpers/hubSpot');
 
 class MigrationController {
   static async migrate() {
-    const totalCharacters = process.env.TOTAL_CHARACTERS;
+    const totalCharacters = process.env.TOTAL_CHARACTERS || 11;
     // 1 and the prime characters
     const idCharacters = [1];
 
@@ -23,6 +23,8 @@ class MigrationController {
     }
 
     const characters = await getCharacter(idCharacters);
+
+    console.log(characters);
 
     const idLocations = [];
 
